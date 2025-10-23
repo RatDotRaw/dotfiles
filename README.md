@@ -30,6 +30,8 @@ After running the script, you will be left with a **very basic** version of **my
 2. Grand `linker.sh` execute permission using `chmod +x linker.sh`
 3. Execute the script using Bash `Bash ./linker.sh`
 
+After the script is done running, it will have created a .backup folder inside the repository with a backup of the previous config files.
+
 ## Feedback
 
 Suggestions and improvements are always welcome!
