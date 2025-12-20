@@ -1,0 +1,235 @@
+;(include "./file.yuck")
+
+(defpoll current_time :interval "1s"
+    "date +'%H:%M:%S'")
+(defpoll current_date :interval "1h"
+    "date +'%a, %b %d'")
+
+(defwindow topbar
+    :class "topbar"
+    :monitor 0
+    :geometry (geometry
+        :x "0%"
+        :y "0px"
+        :width "100%"
+        :height "30px"
+        :anchor "top center"
+    )
+    :stacking "fg"
+    :exclusive true
+    (box
+        :orientation "horizontal"
+        (box 
+            :halign "start"
+            :valign "top"
+            :spacing 10
+            :hexpand true
+            :space-evenly false
+            (workspaces)
+        )
+        (box 
+            :halign "center"
+            :valign "center"
+            :spacing 10
+            :hexpand true
+            :space-evenly false
+            (music)
+        )
+        (box 
+            :halign "end"
+            :valign "bottom"
+            :spacing 10
+            :hexpand true
+            :space-evenly false
+            (sysinfo)
+            (systray)
+            (clock_date_widget)
+            (powermenu)
+        )
+    )
+)
+
+;;;;;;;;;;;;;;;;;
+;;; UTILITIES ;;;
+;;;;;;;;;;;;;;;;;
+
+(defwidget powermenu []
+    (eventbox
+        :onhover "eww update powerbtn=true"
+        :onhoverlost "eww update powerbtn=false"
+        (box
+            :space-evenly "false"
+            (revealer
+                :transition "slideright"
+                :reveal powerbtn
+                :duration "500ms"
+                :space-evenly "false"
+                (box 
+                    (button :onclick "systemctl reboot" :tooltip "Reboot now" "")
+                    (button :onclick "niri msg action quit" :tooltip "Logout now" "󰗽")
+                    (button :onlcick "systemctl suspend" :tooltip "suspend the system" "sleep")
+                )
+            )
+            (button :onclick "shutdown now" :tooltip "Shutdown now" "󰐥")
+        )
+    )
+)
+(defvar powerbtn false)
+
+
+(defwidget workspaces []
+    (box
+        (button :onclick "niri msg action focus-workspace 1" "")
+        (button :onclick "niri msg action focus-workspace 2" "")
+        (button :onclick "niri msg action focus-workspace 3" "")
+        (button :onclick "niri msg action focus-workspace 4" "")
+
+    )
+)
+
+;;;;;;;;;;;;;
+;;; MUSIC ;;;
+;;;;;;;;;;;;;
+
+(defwidget media_controls []
+    (box
+        (button :onclick "playerctl previous" "")
+        (button :onclick 
+            "playerctl ${music_status == 'Playing' ? 'pause' : 'play'}"
+            {music_status == 'Playing' ? '' : ''}
+        )
+        (button :onclick "playerctl next" "")
+    )
+)
+
+(defwidget music []
+    (eventbox
+        :onhover "eww update reveal_music=true"
+        :onhoverlost "eww update reveal_music=false"
+        (box :class "music"
+            :orientation "h"
+            :space-evenly false
+            :halign "center"
+            (box :class "cover-art-s"
+                :style "background-image: url('${cover_art_url}');"
+            )
+            (label 
+                :text {music_artist != "" ? "${music_title}" : ""}
+            )
+            (label
+                :text {music_artist != "" ? "By ${music_artist}" : ""}
+            )
+            (revealer
+                :transition "slideright"
+                :reveal reveal_music
+                :duration "500ms"
+                (media_controls)
+            )
+        )
+    )
+)
+
+(defwindow music_center
+    :class free_widget
+    :monitor 0
+    :geometry (geometry
+        :x "0%"
+        :y "24px"
+        :width "440px"
+        :height "224px"
+        :anchor "top center"
+    )
+    :stacking "overlay"
+    :exclusive false
+    (box
+        :orientation "h"
+        :space-evenly "false"
+        (box 
+            :class "cover-art-l"
+            :geometry (geometry
+                :x "0%"
+                :y "0px"
+                :width "200px"
+                :height "200px"
+            )
+            :style "background-image: url('${cover_art_url}');"
+        )
+        (box
+            :orientation "v"
+            :space-evenly "true"
+            :hexpand "true"
+            (label :text "${music_title}")
+            (label :text "${music_artist}")
+            (media_controls)
+            (scale 
+                :active "true" 
+                :min 0 
+                :max music_length     ; Bound to playerctl 'mpris:length' (microseconds)
+                :value music_progress ; Bound to playerctl 'position' (microseconds)
+            )
+        )
+    )
+)
+
+(defvar reveal_music false)
+(deflisten music_artist :initial ""
+    "playerctl --follow metadata --format '{{ artist }}' || true")
+(deflisten music_title :initial ""
+    "playerctl --follow metadata --format '{{ title }}' || true")
+(deflisten cover_art_url :initial ""
+    "playerctl --follow metadata --format '{{ mpris:artUrl }}'")
+(deflisten music_status :initial ""
+    "playerctl --follow metadata --format '{{status}}'")
+(deflisten music_progress :initial "0"
+    "playerctl --follow metadata --format '{{position}}'")
+(deflisten music_length :initial "100"
+    "playerctl --follow metadata --format '{{mpris:length}}'")
+
+;;;;;;;;;;;;;;;;;;;;
+;;; INFO WIDGETS ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+(defwidget sysinfo []
+    (box 
+        ;space-evenly true
+        ;(box 
+        ;    :orientation "h"
+        ;    (label :text " ")
+        ;    (label :class "bsht" 
+        ;        :text "${round(EWW_RAM.used_mem_perc,0)}%")
+        ;)
+        ;(box 
+        ;    :orientation "h"
+        ;    :space-evenly false
+        ;    (label :text " ")
+        ;    (label :text "${round(EWW_CPU.avg, 0)}%")
+        ;)
+        (circular-progress 
+            :value "${round(EWW_CPU.avg, 0)}"
+            :thickness 4
+            (label :text " ")
+        )
+        (circular-progress 
+            :value "${round(EWW_RAM.used_mem_perc,0)}"
+            :thickness 4
+            (label :text " ")
+        )
+    )
+)
+
+(defwidget clock_date_widget []
+  (box :class "clock-box"
+       :orientation "v"
+       :halign "center"
+       :valign "center"
+       :space-evenly false
+
+    ;; Time display (larger font)
+    (label :class "time"
+           :text current_time)
+
+    ;; Date display (smaller font)
+    (label :class "date"
+           :text current_date)
+  )
+)

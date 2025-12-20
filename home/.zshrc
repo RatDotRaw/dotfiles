@@ -18,10 +18,9 @@ compinit
 setopt hist_ignore_all_dups
 
 alias fucking='sudo'
-alias kanker-update="sudo paru -Syu --noconfirm" 
+alias kanker-update="paru -Syu --noconfirm" 
 
 # actual usefull aliases
-alias venv-init="venv .venv/bin/activate"
-
+alias source-activate="source .venv/bin/activate"
 
 PROMPT='%F{cyan}%n@%m%f %F{blue}%~%f %# '

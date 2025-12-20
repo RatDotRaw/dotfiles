@@ -1,0 +1,48 @@
+// * {
+//    font-size: 12px;
+// }
+
+.topbar {
+    background-color: rgba(0, 0, 0, 0);
+    margin-left: 1rem;
+    margin-right: 1rem;
+    & > box > * {
+        //height: 1px;
+        border-radius: 8px;
+        background-color: rgba(0, 0, 0, 0.5);
+    } 
+}
+
+button {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+label {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.free_widget{
+    border-radius: 8px;
+}
+
+.cover-art-s {
+  min-width: 40px;  /* Set your desired size */
+  min-height: 40px;
+  border-radius: 8px; /* Optional: for rounded corners */
+
+  /* Critical for displaying the image */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.cover-art-l {
+    min-width: 200px;
+    min-height: 200px;
+    border-radius: 8px;
+
+    /* Critical for displaying the image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}

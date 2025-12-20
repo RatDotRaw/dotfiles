@@ -46,8 +46,8 @@ install_pacman_packages() {
 install_paru_packages() {
     local packages=("$@")
     echo -e "${YELLOW}:: Installing AUR packages with paru...${NC}"
-    yay -S --noconfirm "${packages[@]}" || { echo -e "${RED}Error installing yay packages.${NC}"; exit 1; }
-    echo -e "${GREEN}:: Finished installing yay packages.${NC}"
+    paru -S --noconfirm "${packages[@]}" || { echo -e "${RED}Error installing yay packages.${NC}"; exit 1; }
+    echo -e "${GREEN}:: Finished installing paru packages.${NC}"
 }
 
 # Flatpak Package Install helper
