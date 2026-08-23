@@ -18,9 +18,14 @@ compinit
 setopt hist_ignore_all_dups
 
 alias fucking='sudo'
-alias kanker-update="paru -Syu --noconfirm" 
+alias kanker-update="paru -Syu --noconfirm && flatpak update -y" 
+
+export VINTAGE_STORY=~/.local/share/flatpak/app/at.vintagestory.VintageStory/x86_64/stable/active/files/extra/vintagestory/
 
 # actual usefull aliases
 alias source-activate="source .venv/bin/activate"
+alias suspend="systemctl suspend"
 
 PROMPT='%F{cyan}%n@%m%f %F{blue}%~%f %# '
+
+. "$HOME/.local/share/../bin/env"

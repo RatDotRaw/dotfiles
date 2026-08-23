@@ -13,7 +13,7 @@ input {
             // For more information, see xkeyboard-config(7).
 
             // For example:
-            // layout "us,ru"
+            layout "us"
             // options "grp:win_space_toggle,compose:ralt,ctrl:nocaps"
 
             // If this section is empty, niri will fetch xkb settings
@@ -106,19 +106,27 @@ cursor {
     xcursor-size 24
 }
 
-// Settings that influence how windows are positioned and sized.
 // wiki: https://yalter.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
     gaps 6
 
     // When to center a column when changing focus, options are:
-    // - "never", default behavior, focusing an off-screen column will keep at the left
-    //   or right edge of the screen.
+    // - "never", default behavior, focusing an off-screen column will keep at the left or right edge of the screen.
     // - "always", the focused column will always be centered.
-    // - "on-overflow", focusing a column will center it if it doesn't fit
-    //   together with the previously focused column.
-    center-focused-column "never"
+    // - "on-overflow", focusing a column will center it if it doesn't fit together with the previously focused column.
+    center-focused-column "on-overflow"
+
+    // If you only have one window, it stays in the center instead of the left
+    always-center-single-column
+
+    tab-indicator {
+        width 16
+        corner-radius 16
+        position "top"
+        hide-when-single-tab
+        place-within-column
+    }
 
     // You can customize the widths that "switch-preset-column-width" (Mod+R) toggles between.
     preset-column-widths {
@@ -274,9 +282,11 @@ environment {
 /////////////////////
 
 // supports xdg-desktop-autostart
-spawn-at-startup "eww" "daemon"
-spawn-at-startup "eww" "open" "topbar"
-spawn-at-startup "swww-daemon"
+// spawn-at-startup "eww" "daemon"
+// spawn-at-startup "eww" "open" "topbar"
+// spawn-at-startup "awww-daemon"
+// spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
+spawn-at-startup "noctalia"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
@@ -333,6 +343,13 @@ workspace "games" {
 // Window rules let you adjust behavior for individual windows.
 // https://yalter.github.io/niri/Configuration:-Window-Rules
 
+// all windows
+window-rule {
+    geometry-corner-radius 20
+    clip-to-geometry true
+}
+
+// inactive windows
 window-rule {
     match is-active=false
     opacity 0.98
@@ -358,8 +375,15 @@ window-rule {
 }
 
 window-rule {
+  match app-id="dev.noctalia.Noctalia"
+  open-floating true
+  default-column-width { fixed 1080; }
+  default-window-height { fixed 920; }
+}
+
+window-rule {
     // match at-startup=true
-    match app-id=r#".*[S|s]potify|[V|v]esktop|[D|d]iscord.*"#
+    match app-id=r#".*[S|s]potify|[V|v]esktop|[D|d]iscord.*|[S|s]toat.*"#
     // match title=r#".*.*"#
     open-on-workspace "social" 
 }

@@ -68,7 +68,7 @@ if confirm "Go through GPU-related setup?"; then
     if confirm "Do you have an Intel GPU?"; then
         INTEL_GPU=true
     fi
-    if confirm "Do you have a modern NVIDIA GPU?"; then
+    if confirm "Do you have a modern NVIDIA GPU (still stupported)?"; then
         NVIDIA_GPU=true
     fi
 
@@ -112,19 +112,24 @@ PACMAN_PACKAGES=(
     "zsh"
 
     # Desktop Shenanigans
-    "plasma-desktop"
+    "plasma-meta"
     "gnome-keyring"
     "libsecret"                # (not) required for gnome-keyring
     
-    "niri"
+    "niri"                     # compositor
     "xwayland-satellite"       # to run x11 apps (niri)
     "xdg-desktop-portal-gnome" # for screencasting (niri)
-    "swww"                     # for backgound (niri)
-    "mako"                     # for notifications (niri)
+    "awww"                     # for backgound (niri)
+    "noctalia"                 # shell (niri)
+    "fuzzel"                   # 
 
     # Fonts
-    "noto-fonts-cjk"
+    "noto-fonts-cjk"          # mainly asian characters
+    "noto-fonts-emoji"        # for all emoji's
+    "ttf-liberation"          # metric compatible font
     "ttf-jetbrains-mono-nerd"
+    "ttf-nerd-fonts-symbols"  # backup for previous nerd font
+    "ttf-dejavu"              # most common fallback, mathematical and technical symbols
 
     # Development
     "distrobox"
@@ -180,7 +185,7 @@ FLATPAK_APPS=(
 install_flatpak_apps "${FLATPAK_APPS[@]}"
 
 
-if confirm "Install the SDDM greeter?"; then
+if confirm "Install the SDDM greeter for graphical login?"; then
     install_pacman_packages "sddm"
     sudo systemctl enable sddm.service || log_error "Error starting sddm.service"
     confirm "Install & configure the SilentSDDM theme?"; then
@@ -205,6 +210,39 @@ if confirm "Install screen reader and TTS (piper)?"; then
     fi
 fi
 
+if confirm "Go through digital media tools and creative suite related setup (FOSS-only)?"; then
+    ARCH_PACKAGES=()
+    FLATPAK_PACKAGES=()
+    PARU_PACKAGES=()
+
+    if confirm "install Parabolic (youtube-dlp frontend)?"; then
+        FLATPAK_PACKAGES+=("org.nickvision.tubeconverter")
+    fi
+
+    if confirm "Install video editing tools"
+        # TODO: add friction when 1.0 is out.
+        FLATPAK_APPS+=("org.kde.kdenlive")
+    fi
+
+    if confirm "Install Blender?"; then
+        FLATPAK_PACKAGES+=("org.blender.Blender")
+    fi
+
+    if confirm "Install GIMP, Krita & Inkscape?"; then
+        FLATPAK_PACKAGES+=("org.gimp.GIMP" "org.kde.krita" "org.inkscape.Inkscape")
+    fi
+
+    if [ "${#ARCH_PACKAGES[@]}" -gt 0 ]; then
+        install_pacman_packages "${ARCH_PACKAGES[@]}"
+    fi
+    if [ "${#FLATPAK_PACKAGES[@]}" -gt 0 ]; then
+        install_flatpak_apps "${FLATPAK_PACKAGES[@]}"
+    fi
+    if [ "${#PARU_PACKAGES[@]}" -gt 0 ]; then
+        install_paru_packages "${PARU_PACKAGES[@]}"
+    fi
+fi
+
 if confirm "Go through gaming-related setup? (Steam, Bottles, VR, etc.)"; then
     ARCH_PACKAGES=()
     FLATPAK_PACKAGES=()
@@ -223,8 +261,25 @@ if confirm "Go through gaming-related setup? (Steam, Bottles, VR, etc.)"; then
         fi
     fi
 
+    if confirm "Configure pipewire for lower audio latency? This increases cpu usage and crackling audio."; then
+        # pw-top
+        cat <<EOF | sudo tee /etc/pipewire/pipewire.conf.d/99-lowlatency.conf > /dev/null
+context.properties = {
+    default.clock.rate          = 48000
+    default.clock.allowed-rates = [ 44100 48000 88200 96000 ]
+    default.clock.quantum       = 64
+    default.clock.min-quantum   = 32
+    default.clock.max-quantum   = 1024
+}
+EOF || log_error "Failed to write PipeWire latency config"
+    fi
+
+    # if confirm "Install the linux-zen kernel for reduced latency, improved responsiveness and smoother multitaksing? This increases power consumption."; then
+    #     ARCH_PACKAGES+=("linux-zen" "linux-zen-headers")
+    # fi
+
     if [ "${#ARCH_PACKAGES[@]}" -gt 0 ]; then
-        install_paru_packages "${ARCH_PACKAGES[@]}"
+        install_pacman_packages "${ARCH_PACKAGES[@]}"
     fi
     if [ "${#FLATPAK_PACKAGES[@]}" -gt 0 ]; then
         install_flatpak_apps "${FLATPAK_PACKAGES[@]}"
@@ -233,10 +288,6 @@ if confirm "Go through gaming-related setup? (Steam, Bottles, VR, etc.)"; then
         install_paru_packages "${PARU_PACKAGES[@]}"
     fi
 fi
-
-
-
-
 
 if confirm "Install & setup CUPS (for printers)?"; then
     install_pacman_packages "cups"

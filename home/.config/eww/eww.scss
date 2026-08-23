@@ -2,34 +2,107 @@
 //    font-size: 12px;
 // }
 
+$brdr-radius: 12px;
+
+$background: #1a1b26;
+$foreground: #A9B1D6;
+$white: #FFF;
+$black: #24283B;
+$gray: #565F89;
+$red: #F7768E;
+$green: #73DACA;
+$yellow: #E0AF68;
+$blue: #7AA2F7;
+$magenta: #BB9AF7;
+$cyan: #7DCFFF;
+
+*{
+	all: unset;
+    font-family: JetBrainsMono Nerd Font;
+    font-weight: 600;
+	// font-family: feather;
+	// font-family: DaddyTimeMono NF;
+}
+
 .topbar {
     background-color: rgba(0, 0, 0, 0);
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
     & > box > * {
         //height: 1px;
-        border-radius: 8px;
-        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: $brdr-radius;
+        background-color: $background;
     } 
 }
 
 button {
-    background-color: rgba(0, 0, 0, 0);
+    background-color: $background;
+    border-radius: $brdr-radius;
+    font-size: small;
+
+    label {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    &:hover { 
+        background-color: rgba(126, 126, 126, 0.5);
+    }
+
+    &.shutdown{
+        color: $red;
+        &:hover {
+            color: $white;
+            background-color: $red;
+        }
+    }
+    &.suspend{
+        color: $blue;
+        &:hover {
+            color: $white;
+            background-color: $blue;
+        }
+    }
+    &.reboot{
+        color: $yellow;
+        &:hover {
+            color: $white;
+            background-color: $yellow;
+        }
+    }
+    &.logout {
+        color: $magenta;
+        &:hover {
+            color: $white;
+            background-color: $magenta;
+        }
+    }
 }
 
 label {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 .free_widget{
-    border-radius: 8px;
+    border-radius: $brdr-radius;
+}
+
+.music-progress {
+    min-height: 2px;
+}
+.music-progress trough {
+    min-height: 2px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.music-progress highlight {
+    background-color: #1db954; /* your accent color */
 }
 
 .cover-art-s {
-  min-width: 40px;  /* Set your desired size */
-  min-height: 40px;
-  border-radius: 8px; /* Optional: for rounded corners */
+  min-width: 30px;  /* Set your desired size */
+  min-height: 30px;
+  border-radius: 6px; /* Optional: for rounded corners */
 
   /* Critical for displaying the image */
   background-size: cover;
@@ -39,7 +112,7 @@ label {
 .cover-art-l {
     min-width: 200px;
     min-height: 200px;
-    border-radius: 8px;
+    border-radius: $brdr-radius;
 
     /* Critical for displaying the image */
     background-size: cover;

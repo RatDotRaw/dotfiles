@@ -3,7 +3,7 @@
 (defpoll current_time :interval "1s"
     "date +'%H:%M:%S'")
 (defpoll current_date :interval "1h"
-    "date +'%a, %b %d'")
+    "date +'%b %d'") ;"date +'%a, %b %d'"
 
 (defwindow topbar
     :class "topbar"
@@ -31,7 +31,7 @@
             :halign "center"
             :valign "center"
             :spacing 10
-            :hexpand true
+            :hexpand false
             :space-evenly false
             (music)
         )
@@ -41,9 +41,9 @@
             :spacing 10
             :hexpand true
             :space-evenly false
+            (clock_date_widget)
             (sysinfo)
             (systray)
-            (clock_date_widget)
             (powermenu)
         )
     )
@@ -62,15 +62,15 @@
             (revealer
                 :transition "slideright"
                 :reveal powerbtn
-                :duration "500ms"
-                :space-evenly "false"
+                :duration "200ms"
+;                :space-evenly "false"
                 (box 
-                    (button :onclick "systemctl reboot" :tooltip "Reboot now" "")
-                    (button :onclick "niri msg action quit" :tooltip "Logout now" "󰗽")
-                    (button :onlcick "systemctl suspend" :tooltip "suspend the system" "sleep")
+                    (button :class "reboot" :onclick "systemctl reboot" :tooltip "Reboot now" "")
+                    (button :class "logout" :onclick "niri msg action quit" :tooltip "Logout now" "󰗽")
+                    (button :class "suspend" :onclick "systemctl suspend" :tooltip "suspend the system" "")
                 )
             )
-            (button :onclick "shutdown now" :tooltip "Shutdown now" "󰐥")
+            (button :class "shutdown" :onclick "shutdown now" :tooltip "Shutdown now" "󰐥" )
         )
     )
 )
@@ -106,24 +106,36 @@
     (eventbox
         :onhover "eww update reveal_music=true"
         :onhoverlost "eww update reveal_music=false"
-        (box :class "music"
-            :orientation "h"
+        (box :class "music-container"
+            :orientation "v"
             :space-evenly false
-            :halign "center"
-            (box :class "cover-art-s"
-                :style "background-image: url('${cover_art_url}');"
+            ;; Progress bar - using scale widget instead
+            (scale 
+                :class "music-progress"
+                :min 0
+                :max 100
+                :value {music_length > 0 ? (music_progress / music_length) * 100 : 0}
+                :active false
             )
-            (label 
-                :text {music_artist != "" ? "${music_title}" : ""}
-            )
-            (label
-                :text {music_artist != "" ? "By ${music_artist}" : ""}
-            )
-            (revealer
-                :transition "slideright"
-                :reveal reveal_music
-                :duration "500ms"
-                (media_controls)
+            (box :class "music"
+                :orientation "h"
+                :space-evenly false
+                :halign "center"
+                (box :class "cover-art-s"
+                    :style "background-image: url('${cover_art_url}');"
+                )
+                (label 
+                    :text {music_artist != "" ? "${music_title}" : ""}
+                )
+                (label
+                    :text {music_artist != "" ? "- ${music_artist}" : ""}
+                )
+                (revealer
+                    :transition "slideright"
+                    :reveal reveal_music
+                    :duration "200ms"
+                    (media_controls)
+                )
             )
         )
     )
@@ -134,7 +146,7 @@
     :monitor 0
     :geometry (geometry
         :x "0%"
-        :y "24px"
+        :y "240px"
         :width "440px"
         :height "224px"
         :anchor "top center"
@@ -171,19 +183,21 @@
     )
 )
 
+
 (defvar reveal_music false)
 (deflisten music_artist :initial ""
-    "playerctl --follow metadata --format '{{ artist }}' || true")
+    "playerctl --player='spotify,firefox,chromium,%any' --follow metadata --format '{{ artist }}' || true")
 (deflisten music_title :initial ""
-    "playerctl --follow metadata --format '{{ title }}' || true")
+    "playerctl --player='spotify,firefox,chromium,%any' --follow metadata --format '{{ title }}' || true")
 (deflisten cover_art_url :initial ""
-    "playerctl --follow metadata --format '{{ mpris:artUrl }}'")
-(deflisten music_status :initial ""
-    "playerctl --follow metadata --format '{{status}}'")
-(deflisten music_progress :initial "0"
-    "playerctl --follow metadata --format '{{position}}'")
+    "playerctl --player='spotify,firefox,chromium,%any' --follow metadata --format '{{ mpris:artUrl }}'")
+
+(deflisten music_status :initial "Stopped"
+    "playerctl --player='spotify,firefox,chromium,%any' --follow status || echo 'Stopped'")
+(deflisten music_progress :interval "1s" :initial "0"
+    "playerctl --player='spotify,firefox,chromium,%any' position || echo 0")
 (deflisten music_length :initial "100"
-    "playerctl --follow metadata --format '{{mpris:length}}'")
+    "playerctl --player='spotify,firefox,chromium,%any' --follow metadata --format '{{ mpris:length }}' || echo 100")
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; INFO WIDGETS ;;;
@@ -219,7 +233,7 @@
 
 (defwidget clock_date_widget []
   (box :class "clock-box"
-       :orientation "v"
+       :orientation "h"
        :halign "center"
        :valign "center"
        :space-evenly false

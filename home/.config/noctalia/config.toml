@@ -1,0 +1,32 @@
+[theme]
+mode   = "dark"
+source = "wallpaper"
+
+[shell]
+polkit_agent   = true
+password_style = "random"
+
+[bar.default]
+position    = "top"
+background_opacity = 0.8
+thickness   = 40
+margin_ends = 4
+start = ["launcher", "workspaces", "spacer", "taskbar"]
+end = ["audio_visualizer", "media", "sysmon", "tray", "privacy", "bluetooth", "network", "volume", "battery", "session"]
+
+[wallpaper]
+directory = "/home/stafd/Pictures/Wallpapers"
+
+[dock]
+emabled   = false
+position  = "bottom"
+show_dots = true
+
+[widget.privacy]
+type           = "privacy"
+hide_inactive  = true
+icon_spacing   = 6
+
+[widget.cpu]
+type = "sysmon"
+stat = "cpu_usage"
