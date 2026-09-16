@@ -21,6 +21,7 @@ alias fucking='sudo'
 alias kanker-update="paru -Syu --noconfirm && flatpak update -y" 
 
 export VINTAGE_STORY=~/.local/share/flatpak/app/at.vintagestory.VintageStory/x86_64/stable/active/files/extra/vintagestory/
+export DOTNET_ROOT=$HOME/.dotnet
 
 # actual usefull aliases
 alias source-activate="source .venv/bin/activate"

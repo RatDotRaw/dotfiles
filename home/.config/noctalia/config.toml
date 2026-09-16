@@ -10,7 +10,7 @@ password_style = "random"
 position    = "top"
 background_opacity = 0.8
 thickness   = 40
-margin_ends = 4
+margin_ends = 3
 start = ["launcher", "workspaces", "spacer", "taskbar"]
 end = ["audio_visualizer", "media", "sysmon", "tray", "privacy", "bluetooth", "network", "volume", "battery", "session"]
 
@@ -22,6 +22,11 @@ emabled   = false
 position  = "bottom"
 show_dots = true
 
+[widget.clock]
+format = "{:%H:%M:%S} {:%A %d/%m}"
+vertical_format = "{:%H\n%M}"
+tooltip_format = "{:%A, %B %d, %Y}"
+
 [widget.privacy]
 type           = "privacy"
 hide_inactive  = true
@@ -30,3 +35,6 @@ icon_spacing   = 6
 [widget.cpu]
 type = "sysmon"
 stat = "cpu_usage"
+
+[widget.volume]
+show_label = false

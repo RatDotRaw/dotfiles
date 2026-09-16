@@ -50,57 +50,130 @@ fi
 # echo -e "${GREEN}:: Full system updated with paru.${NC}"
 
 if confirm "Go through GPU-related setup?"; then
-    PACKAGES=()
+    PACMAN_GPU_PACKAGES=()
     GPU_32BIT=false
     AMD_GPU=false
     INTEL_GPU=false
     NVIDIA_GPU=false
+    NVIDIA_MODERN=false
+    NVIDIA_OPEN=false
     CONFIG_NVIDIA_TOOLKIT=false
 
     # Ask high-level questions
-    if confirm "Enable support for 32-bit applications? (recommended for old games)"; then
-        GPU_32BIT=true
-    fi
-
     if confirm "Do you have an AMD GPU?"; then
         AMD_GPU=true
     fi
     if confirm "Do you have an Intel GPU?"; then
         INTEL_GPU=true
     fi
-    if confirm "Do you have a modern NVIDIA GPU (still stupported)?"; then
+    if confirm "Do you have an NVIDIA GPU?"; then
         NVIDIA_GPU=true
+        if confirm "Is it a modern NVIDIA GPU (Turing / GTX 16xx, RTX 20xx or newer, ~2018+)?"; then
+            NVIDIA_MODERN=true
+            if confirm "Use open-source kernel module (nvidia-open-dkms) instead of proprietary (nvidia-dkms)? (Recommended: yes for modern GPUs - kernel is open, firmware still proprietary)"; then
+                NVIDIA_OPEN=true
+            fi
+        else
+            log_info "Legacy NVIDIA GPU detected - will use open-source nouveau driver (mesa)."
+        fi
+    fi
+
+    if confirm "Install support for 32-bit applications? (recommended for gaming / Wine / Steam)"; then
+        GPU_32BIT=true
     fi
 
     # Decide which packages to install
     if [ "$AMD_GPU" = true ] || [ "$INTEL_GPU" = true ]; then
-        PACKAGES+=("mesa")
+        PACMAN_GPU_PACKAGES+=("mesa")
         if [ "$GPU_32BIT" = true ]; then
-            PACKAGES+=("lib32-mesa")
+            PACMAN_GPU_PACKAGES+=("lib32-mesa")
         fi
-        if 
+        # Vulkan support
+        if [ "$AMD_GPU" = true ]; then
+            PACMAN_GPU_PACKAGES+=("vulkan-radeon")
+            if [ "$GPU_32BIT" = true ]; then
+                PACMAN_GPU_PACKAGES+=("lib32-vulkan-radeon")
+            fi
+        fi
+        if [ "$INTEL_GPU" = true ]; then
+            PACMAN_GPU_PACKAGES+=("vulkan-intel")
+            if [ "$GPU_32BIT" = true ]; then
+                PACMAN_GPU_PACKAGES+=("lib32-vulkan-intel")
+            fi
+        fi
     fi
 
     if [ "$NVIDIA_GPU" = true ]; then
-        PACKAGES+=("nvidia-dkms")
-        if [ "$GPU_32BIT" = true ]; then
-            PACKAGES+=("lib32-nvidia-utils")
-        fi
-        if confirm "Install CUDA?"; then
-            PACKAGES+=("cuda")
-        fi
-        if confirm "Install & configure NVIDIA Container Toolkit?"; then
-            PACKAGES+=("nvidia-container-toolkit")
-            CONFIG_NVIDIA_TOOLKIT=true
+        if [ "$NVIDIA_MODERN" = true ]; then
+            PACMAN_GPU_PACKAGES+=("nvidia-open-dkms" "nvidia-utils")
+            log_info "Selected nvidia-open-dkms (open kernel module) + nvidia-utils."
+            if [ "$GPU_32BIT" = true ]; then
+                PACMAN_GPU_PACKAGES+=("lib32-nvidia-utils")
+            fi
+            if confirm "Install CUDA? (for compute/ML, only for modern NVIDIA)"; then
+                PACMAN_GPU_PACKAGES+=("cuda")
+            fi
+            if confirm "Install & configure NVIDIA Container Toolkit?"; then
+                PACMAN_GPU_PACKAGES+=("nvidia-container-toolkit")
+                CONFIG_NVIDIA_TOOLKIT=true
+            fi
+        else
+            # Legacy - always open (nouveau) per user preference
+            PACMAN_GPU_PACKAGES+=("mesa" "xf86-video-nouveau" "vulkan-nouveau")
+            if [ "$GPU_32BIT" = true ]; then
+                PACMAN_GPU_PACKAGES+=("lib32-mesa" "lib32-vulkan-nouveau")
+            fi
+            log_info "Using open-source nouveau driver for legacy NVIDIA (no proprietary packages)."
+            log_warning "CUDA and NVIDIA Container Toolkit are not supported with nouveau."
         fi
     fi
 
-    if [ "${#PACKAGES[@]}" -gt 0 ]; then
-        install_arch_packages "${PACKAGES[@]}"
+    if [ "${#PACMAN_GPU_PACKAGES[@]}" -gt 0 ]; then
+        install_pacman_packages "${PACMAN_GPU_PACKAGES[@]}"
     fi
 
     if [ "$CONFIG_NVIDIA_TOOLKIT" = true ]; then
         sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml || { log_error "Error generating NVIDIA CDI config."; }
+    fi
+fi
+
+if confirm "Do you want a something like a desktop environment?"; then
+    PACMAN_DE_PACKAGES=()
+    PARU_DE_PACKAGES=()
+
+    CUSTOM_THEME=false
+    
+    if confirm "Install the SDDM greeter for graphical login?"; then
+        install_pacman_packages "sddm"
+        sudo systemctl enable sddm.service || log_error "Error starting sddm.service"
+        confirm "Install & configure the SilentSDDM theme?"; then
+            CUSTOM_THEME=true
+            PACMAN_DE_PACKAGES+=("sddm-silent-theme-git")
+        fi
+    fi
+
+    if confirm "Install Niri and its dependancies?"; then
+        PACMAN_DE_PACKAGES+=(
+            "niri"                     # compositor
+            "xwayland-satellite"       # to run x11 apps (niri)
+            "xdg-desktop-portal-gnome" # for screencasting (niri)
+            "awww"                     # for backgound (niri)
+            "noctalia"                 # shell (niri)
+            "fuzzel" 
+        )
+    fi
+
+    if [ "${#PACMAN_DE_PACKAGES[@]}" -gt 0 ]; then
+        install_pacman_packages "${PACMAN_DE_PACKAGES[@]}"
+    fi
+    if [ "${#PARU_DE_PACKAGES[@]}" -gt 0 ]; then
+        install_pacman_packages "${PARU_DE_PACKAGES[@]}"
+    fi
+
+    if [ "$PARU_DE_PACKAGES" = true ]; then
+        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf General.InputMethod qtvirtualkeyboard
+        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf General.GreeterEnvironment "GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard"
+        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf Theme.Current silent
     fi
 fi
 
@@ -114,14 +187,7 @@ PACMAN_PACKAGES=(
     # Desktop Shenanigans
     "plasma-meta"
     "gnome-keyring"
-    "libsecret"                # (not) required for gnome-keyring
-    
-    "niri"                     # compositor
-    "xwayland-satellite"       # to run x11 apps (niri)
-    "xdg-desktop-portal-gnome" # for screencasting (niri)
-    "awww"                     # for backgound (niri)
-    "noctalia"                 # shell (niri)
-    "fuzzel"                   # 
+    "libsecret"               # (not) required for gnome-keyring
 
     # Fonts
     "noto-fonts-cjk"          # mainly asian characters
@@ -185,16 +251,7 @@ FLATPAK_APPS=(
 install_flatpak_apps "${FLATPAK_APPS[@]}"
 
 
-if confirm "Install the SDDM greeter for graphical login?"; then
-    install_pacman_packages "sddm"
-    sudo systemctl enable sddm.service || log_error "Error starting sddm.service"
-    confirm "Install & configure the SilentSDDM theme?"; then
-        install_paru_packages "sddm-silent-theme-git"
-        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf General.InputMethod qtvirtualkeyboard
-        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf General.GreeterEnvironment "GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard"
-        sudo git config --file=/usr/lib/sddm/sddm.conf.d/default.conf Theme.Current silent
-    fi
-fi
+
 
 log_warning "Piper-tts needs manual configuration! Read 'https://wiki.archlinux.org/title/Speech_dispatcher' for instructions, I believe in you!"
 if confirm "Install screen reader and TTS (piper)?"; then
