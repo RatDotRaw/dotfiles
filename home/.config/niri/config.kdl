@@ -109,7 +109,7 @@ cursor {
 // wiki: https://yalter.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 6
+    gaps 3
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left or right edge of the screen.
@@ -342,7 +342,7 @@ workspace "games" {
 
 // all windows
 window-rule {
-    geometry-corner-radius 20
+    geometry-corner-radius 0
     clip-to-geometry true
 }
 
@@ -380,9 +380,10 @@ window-rule {
 
 window-rule {
     // match at-startup=true
-    match app-id=r#".*[S|s]potify|[V|v]esktop|[D|d]iscord.*|[S|s]toat.*|[C|c]inny.*"#
+    match app-id=r#".*[S|s]potify|[V|v]esktop|[D|d]iscord.*|[S|s]toat.*|[C|c]inny.*|[F|f]uffy[C|c]hat.*"#
     // match title=r#".*.*"#
     open-on-workspace "social" 
+    open-focused false
 }
 window-rule {
     // match at-startup=true

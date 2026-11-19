@@ -1,6 +1,7 @@
 [theme]
-mode   = "dark"
-source = "wallpaper"
+mode    = "dark"
+source  = "builtin"
+builtin = "Gruvbox"
 
 [shell]
 polkit_agent   = true
@@ -8,9 +9,11 @@ password_style = "random"
 
 [bar.default]
 position    = "top"
-background_opacity = 0.8
+background_opacity = 1.0
+shadow      = false
+radius = 0
 thickness   = 40
-margin_ends = 3
+margin_ends = 0
 start = ["launcher", "workspaces", "spacer", "taskbar"]
 end = ["audio_visualizer", "media", "sysmon", "tray", "privacy", "bluetooth", "network", "volume", "battery", "session"]
 

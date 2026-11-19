@@ -42,6 +42,23 @@ install_pacman_packages() {
     echo -e "${GREEN}:: Finished installing pacman packages.${NC}"
 }
 
+remove_pacman_packages() {
+    local packages=("$@")
+    local installed_packages=()
+    for pkg in "${packages[@]}"; do
+        if pacman -Q "$pkg" &>/dev/null; then
+            installed_packages+=("$pkg")
+        fi
+    done
+    if [ "${#installed_packages[@]}" -eq 0 ]; then
+        echo -e "${YELLOW}:: No packages to remove, skipping.${NC}"
+        return 0
+    fi
+    echo -e "${YELLOW}:: Removing Arch packages with pacman...${NC}"
+    sudo pacman -Rsu --noconfirm "${installed_packages[@]}" || { echo -e "${RED}Error removing pacman packages.${NC}"; exit 1; }
+    echo -e "${GREEN}:: Finished removing pacman packages.${NC}"
+}
+
 # Paru Package install helper
 install_paru_packages() {
     local packages=("$@")
